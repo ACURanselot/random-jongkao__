@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>랜덤 종카어 생성기</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f5f5f5;
+    font-family: Arial, sans-serif;
+  }
+  .box {
+    width: min(700px, 92vw);
+    background: white;
+    padding: 28px;
+    border-radius: 18px;
+    box-shadow: 0 8px 30px #00000012;
+  }
+  h1 { margin: 0 0 20px; font-size: 24px; }
+  .row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+  button {
+    border: 0;
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 15px;
+    cursor: pointer;
+    background: #222;
+    color: white;
+  }
+  button:hover { opacity: .85; }
+  #result {
+    width: 100%;
+    min-height: 150px;
+    padding: 16px;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    background: #fafafa;
+    font-size: 24px;
+    line-height: 1.5;
+    word-break: break-all;
+    white-space: pre-wrap;
+  }
+  .hint { color: #777; font-size: 13px; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <main class="box">
+    <h1>랜덤 종카어 생성기</h1>
+
+    <div class="row">
+      <input id="count" type="number" min="1" max="100000" value="100" placeholder="랜덤 글자 수">
+    </div>
+
+    <div class="row">
+      <input id="startWord" type="text" placeholder="처음에 넣을 단어 (선택, 여러 개는 ,로 구분)">
+    </div>
+
+    <div class="row">
+      <input id="middleWord" type="text" placeholder="중간에 넣을 단어 (선택, 여러 개는 ,로 구분)">
+    </div>
+
+    <div class="row">
+      <input id="customChars" type="text" placeholder="사용 문자에 추가 (예: 종카,어,ABC)">
+      <button onclick="generate()">생성</button>
+      <button onclick="copyResult()">복사</button>
+    </div>
+
+    <div id="result"></div>
+    <div class="hint">
+      기본 사용 문자: ㍰ ⣿ ■ · 추가 문자는 쉼표(,)로 여러 개 입력할 수 있습니다.<br>
+      시작/중간 단어도 쉼표로 여러 개 입력하면 그중 하나가 랜덤으로 선택됩니다.
+    </div>
+  </main>
+
+<script>
+const chars = ["㍰", "⣿", "■"];
+
+function parseOptions(text) {
+  return text.split(",").map(s => s.trim()).filter(Boolean);
+}
+
+function generate() {
+  const count = Math.max(1, Math.min(100000, Number(document.getElementById("count").value) || 1));
+  const startWords = parseOptions(document.getElementById("startWord").value);
+  const middleWords = parseOptions(document.getElementById("middleWord").value);
+  const customChars = parseOptions(document.getElementById("customChars").value);
+
+  // 기본 문자 + 사용자가 추가한 문자/단어
+  const pool = [...chars, ...customChars];
+
+  let result = "";
+  for (let i = 0; i < count; i++) {
+    result += pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  // 처음에 넣을 단어
+  if (startWords.length > 0) {
+    const startWord = startWords[Math.floor(Math.random() * startWords.length)];
+    result = startWord + result;
+  }
+
+  // 중간에 넣을 단어: 쉼표로 구분한 모든 단어를 각각 랜덤 위치에 삽입
+  if (middleWords.length > 0) {
+    middleWords.forEach(middleWord => {
+      const position = Math.floor(Math.random() * (result.length + 1));
+      result = result.slice(0, position) + middleWord + result.slice(position);
+    });
+  }
+
+  document.getElementById("result").textContent = result;
+}
+
+async function copyResult() {
+  const text = document.getElementById("result").textContent;
+  if (!text) generate();
+  const value = document.getElementById("result").textContent;
+  try {
+    await navigator.clipboard.writeText(value);
+    alert("복사되었습니다!");
+  } catch {
+    const area = document.createElement("textarea");
+    area.value = value;
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand("copy");
+    area.remove();
+    alert("복사되었습니다!");
+  }
+}
+
+generate();
+</script>
+</body>
+</html>
